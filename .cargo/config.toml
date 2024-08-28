@@ -1,0 +1,5 @@
+[alias]
+b = "build"
+r = "run"
+br = "build --release --no-default-features"
+rr = "run --release --no-default-features"
