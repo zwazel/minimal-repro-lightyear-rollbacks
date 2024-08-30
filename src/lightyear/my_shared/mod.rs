@@ -3,7 +3,10 @@ use std::time::Duration;
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use client::ComponentSyncMode;
-use lib::{Channel1, FixedSet, PlayerId, SERVER_REPLICATION_INTERVAL};
+use lib::{
+    Channel1, FixedSet, PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerId,
+    SERVER_REPLICATION_INTERVAL,
+};
 use lightyear::{
     prelude::*,
     utils::avian3d::{position, rotation},
@@ -13,6 +16,7 @@ use renderer::MyRendererPlugin;
 use crate::FIXED_TIMESTEP_HZ;
 
 pub mod lib;
+pub mod physics;
 mod renderer;
 
 pub struct MySharedPlugin;
@@ -34,11 +38,24 @@ impl Plugin for MySharedPlugin {
             ),
         );
 
-        app.register_type::<PlayerId>();
+        app.register_type::<PlayerId>()
+            .register_type::<PhysicalPlayerHeadMarker>()
+            .register_type::<PhysicalPlayerBodyMarker>();
 
         app.register_component::<PlayerId>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once)
             .add_interpolation(ComponentSyncMode::Once);
+
+        app.register_component::<PhysicalPlayerHeadMarker>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Full)
+            .add_interpolation(ComponentSyncMode::Full)
+            .add_linear_interpolation_fn();
+
+        app.register_component::<PhysicalPlayerBodyMarker>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Full)
+            .add_interpolation(ComponentSyncMode::Full)
+            .add_linear_interpolation_fn()
+            .add_map_entities();
 
         app.register_component::<Name>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once)

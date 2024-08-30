@@ -84,7 +84,7 @@ fn setup_ui(mut commands: Commands) {
                      mut next_state: ResMut<NextState<GameState>>| {
                         network.set_to_host();
                         commands.start_server();
-                        commands.connect_client();
+                        //commands.connect_client();
                         next_state.set(GameState::Started { paused: false });
                     },
                 )
