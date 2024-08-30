@@ -11,6 +11,8 @@ use lightyear::{
     prelude::*,
     utils::avian3d::{position, rotation},
 };
+use lightyear::client::prediction::Predicted;
+use lightyear::prelude::client::{Rollback, RollbackState};
 use renderer::MyRendererPlugin;
 use server::NetworkingState as ServerNetworkingState;
 
@@ -22,6 +24,17 @@ pub mod physics;
 mod renderer;
 
 pub struct MySharedPlugin;
+
+const ROLLBACK_THRESHOLD: f32 = 0.0001;
+
+/// Returns true if the difference in position is greater than a threshold
+fn should_rollback_position(this: &Position, that: &Position) -> bool {
+    !this.abs_diff_eq(that.0, ROLLBACK_THRESHOLD)
+}
+
+fn should_rollback_linear_velocity(this: &LinearVelocity, that: &LinearVelocity) -> bool {
+    !this.abs_diff_eq(that.0, ROLLBACK_THRESHOLD)
+}
 
 impl Plugin for MySharedPlugin {
     fn build(&self, app: &mut App) {
@@ -45,6 +58,8 @@ impl Plugin for MySharedPlugin {
         )
         .add_systems(OnEnter(ClientNetworkingState::Connected), go_ingame)
         .add_systems(OnEnter(ServerNetworkingState::Started), go_ingame);
+
+        app.add_systems(Last, debug_position);
 
         app.register_type::<PlayerId>()
             .register_type::<PhysicalPlayerHeadMarker>()
@@ -77,6 +92,7 @@ impl Plugin for MySharedPlugin {
         // General Physics stuff
         app.register_component::<Position>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Full)
+            // .add_should_rollback(should_rollback_position)
             .add_interpolation(ComponentSyncMode::Full)
             .add_interpolation_fn(position::lerp)
             .add_correction_fn(position::lerp);
@@ -90,6 +106,7 @@ impl Plugin for MySharedPlugin {
         // NOTE: interpolation/correction is only needed for components that are visually displayed!
         // we still need prediction to be able to correctly predict the physics on the client
         app.register_component::<LinearVelocity>(ChannelDirection::ServerToClient)
+            // .add_should_rollback(should_rollback_linear_velocity)
             .add_prediction(ComponentSyncMode::Full);
 
         app.register_component::<AngularVelocity>(ChannelDirection::ServerToClient)
@@ -108,5 +125,18 @@ pub fn shared_config() -> SharedConfig {
             tick_duration: Duration::from_secs_f64(1.0 / FIXED_TIMESTEP_HZ),
         },
         mode: Mode::HostServer,
+    }
+}
+
+
+pub fn debug_position(
+    tick_manager: Res<TickManager>,
+    rollback: Res<Rollback>,
+    q: Query<(Entity, &Position), With<Predicted>>,
+) {
+    let is_rollback = rollback.is_rollback();
+    let tick = tick_manager.tick_or_rollback_tick(rollback.as_ref());
+    for (e, pos) in q.iter() {
+        info!(?tick, ?e, ?pos, ?is_rollback, "last")
     }
 }

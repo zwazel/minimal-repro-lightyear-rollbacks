@@ -2,7 +2,7 @@ use avian3d::prelude::*;
 use bevy::{color::palettes::css, prelude::*};
 use leafwing_input_manager::prelude::*;
 use lightyear::prelude::client::{ClientConnection, Interpolated, NetClient, Predicted};
-
+use lightyear::prelude::is_host_server;
 use crate::{
     lightyear::my_shared::lib::{
         PhysicalPlayerBodyBundle, PhysicalPlayerBodyMarker, PhysicalPlayerHeadBundle,
