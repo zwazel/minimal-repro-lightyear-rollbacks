@@ -4,8 +4,8 @@ use avian3d::prelude::*;
 use bevy::prelude::*;
 use client::{ComponentSyncMode, NetworkingState as ClientNetworkingState};
 use lib::{
-    Channel1, FixedSet, PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerId,
-    SERVER_REPLICATION_INTERVAL,
+    Channel1, FixedSet, PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerActions,
+    PlayerId, SERVER_REPLICATION_INTERVAL,
 };
 use lightyear::{
     prelude::*,
@@ -17,6 +17,7 @@ use server::NetworkingState as ServerNetworkingState;
 use crate::{my_states::GameState, FIXED_TIMESTEP_HZ};
 
 pub mod lib;
+pub mod movement;
 pub mod physics;
 mod renderer;
 
@@ -24,23 +25,26 @@ pub struct MySharedPlugin;
 
 impl Plugin for MySharedPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MyRendererPlugin)
-            .configure_sets(
-                FixedUpdate,
+        app.add_plugins((
+            MyRendererPlugin,
+            LeafwingInputPlugin::<PlayerActions>::default(),
+        ))
+        .configure_sets(
+            FixedUpdate,
+            (
+                // make sure that any physics simulation happens after the Main SystemSet
+                // (where we apply user's actions)
                 (
-                    // make sure that any physics simulation happens after the Main SystemSet
-                    // (where we apply user's actions)
-                    (
-                        PhysicsSet::Prepare,
-                        PhysicsSet::StepSimulation,
-                        PhysicsSet::Sync,
-                    )
-                        .in_set(FixedSet::Physics),
-                    (FixedSet::Main, FixedSet::Physics).chain(),
-                ),
-            )
-            .add_systems(OnEnter(ClientNetworkingState::Connected), go_ingame)
-            .add_systems(OnEnter(ServerNetworkingState::Started), go_ingame);
+                    PhysicsSet::Prepare,
+                    PhysicsSet::StepSimulation,
+                    PhysicsSet::Sync,
+                )
+                    .in_set(FixedSet::Physics),
+                (FixedSet::Main, FixedSet::Physics).chain(),
+            ),
+        )
+        .add_systems(OnEnter(ClientNetworkingState::Connected), go_ingame)
+        .add_systems(OnEnter(ServerNetworkingState::Started), go_ingame);
 
         app.register_type::<PlayerId>()
             .register_type::<PhysicalPlayerHeadMarker>()

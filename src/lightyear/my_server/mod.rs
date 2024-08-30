@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use input_server::MyServerInputPlugin;
 use lightyear::prelude::*;
+use movement_server::MyServerMovementPlugin;
 use server::{
     ControlledBy, IoConfig, NetConfig, NetcodeConfig, Replicate, ServerConfig, ServerPlugins,
     ServerTransport, SyncTarget,
@@ -13,12 +15,19 @@ use super::{
     },
 };
 
+mod input_server;
+mod movement_server;
+
 pub struct MyServerPlugin;
 
 impl Plugin for MyServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(build_server_plugin())
-            .add_systems(Update, replicate_players.run_if(is_host_server));
+        app.add_plugins((
+            build_server_plugin(),
+            MyServerMovementPlugin,
+            MyServerInputPlugin,
+        ))
+        .add_systems(Update, replicate_players.run_if(is_host_server));
     }
 }
 
