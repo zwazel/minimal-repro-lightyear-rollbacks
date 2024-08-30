@@ -92,7 +92,7 @@ impl Plugin for MySharedPlugin {
         // General Physics stuff
         app.register_component::<Position>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Full)
-            .add_should_rollback(should_rollback_position)
+            // .add_should_rollback(should_rollback_position)
             .add_interpolation(ComponentSyncMode::Full)
             .add_interpolation_fn(position::lerp)
             .add_correction_fn(position::lerp);
@@ -106,7 +106,7 @@ impl Plugin for MySharedPlugin {
         // NOTE: interpolation/correction is only needed for components that are visually displayed!
         // we still need prediction to be able to correctly predict the physics on the client
         app.register_component::<LinearVelocity>(ChannelDirection::ServerToClient)
-            .add_should_rollback(should_rollback_linear_velocity)
+            // .add_should_rollback(should_rollback_linear_velocity)
             .add_prediction(ComponentSyncMode::Full);
 
         app.register_component::<AngularVelocity>(ChannelDirection::ServerToClient)
