@@ -3,6 +3,7 @@ use bevy::prelude::*;
 mod my_client;
 mod my_server;
 mod my_shared;
+pub mod lib;
 
 pub struct MyLightyearPlugin;
 
