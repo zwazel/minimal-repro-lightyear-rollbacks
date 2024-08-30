@@ -5,12 +5,15 @@ pub(crate) struct MyStatesPlugin;
 impl Plugin for MyStatesPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<GameState>()
+            .register_type::<InGame>()
             .register_type::<InGameUnpaused>()
             .register_type::<InGamePaused>()
             .init_state::<GameState>()
+            .add_computed_state::<InGame>()
             .add_computed_state::<InGameUnpaused>()
             .add_computed_state::<InGamePaused>()
             .enable_state_scoped_entities::<GameState>()
+            .enable_state_scoped_entities::<InGame>()
             .enable_state_scoped_entities::<InGamePaused>()
             .enable_state_scoped_entities::<InGameUnpaused>();
     }
@@ -26,7 +29,21 @@ pub enum GameState {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Reflect, Default)]
-pub(crate) struct InGameUnpaused;
+pub struct InGame;
+
+impl ComputedStates for InGame {
+    type SourceStates = GameState;
+
+    fn compute(sources: Self::SourceStates) -> Option<Self> {
+        match sources {
+            GameState::Started { .. } => Some(Self),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Reflect, Default)]
+pub struct InGameUnpaused;
 
 impl ComputedStates for InGameUnpaused {
     type SourceStates = GameState;
@@ -40,7 +57,7 @@ impl ComputedStates for InGameUnpaused {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Reflect, Default)]
-pub(crate) struct InGamePaused;
+pub struct InGamePaused;
 
 impl ComputedStates for InGamePaused {
     type SourceStates = GameState;
