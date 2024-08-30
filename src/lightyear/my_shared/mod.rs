@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use avian3d::prelude::*;
 use bevy::prelude::*;
-use client::ComponentSyncMode;
+use client::{ComponentSyncMode, NetworkingState as ClientNetworkingState};
 use lib::{
     Channel1, FixedSet, PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerId,
     SERVER_REPLICATION_INTERVAL,
@@ -12,8 +12,9 @@ use lightyear::{
     utils::avian3d::{position, rotation},
 };
 use renderer::MyRendererPlugin;
+use server::NetworkingState as ServerNetworkingState;
 
-use crate::FIXED_TIMESTEP_HZ;
+use crate::{my_states::GameState, FIXED_TIMESTEP_HZ};
 
 pub mod lib;
 pub mod physics;
@@ -23,20 +24,23 @@ pub struct MySharedPlugin;
 
 impl Plugin for MySharedPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MyRendererPlugin).configure_sets(
-            FixedUpdate,
-            (
-                // make sure that any physics simulation happens after the Main SystemSet
-                // (where we apply user's actions)
+        app.add_plugins(MyRendererPlugin)
+            .configure_sets(
+                FixedUpdate,
                 (
-                    PhysicsSet::Prepare,
-                    PhysicsSet::StepSimulation,
-                    PhysicsSet::Sync,
-                )
-                    .in_set(FixedSet::Physics),
-                (FixedSet::Main, FixedSet::Physics).chain(),
-            ),
-        );
+                    // make sure that any physics simulation happens after the Main SystemSet
+                    // (where we apply user's actions)
+                    (
+                        PhysicsSet::Prepare,
+                        PhysicsSet::StepSimulation,
+                        PhysicsSet::Sync,
+                    )
+                        .in_set(FixedSet::Physics),
+                    (FixedSet::Main, FixedSet::Physics).chain(),
+                ),
+            )
+            .add_systems(OnEnter(ClientNetworkingState::Connected), go_ingame)
+            .add_systems(OnEnter(ServerNetworkingState::Started), go_ingame);
 
         app.register_type::<PlayerId>()
             .register_type::<PhysicalPlayerHeadMarker>()
@@ -87,6 +91,10 @@ impl Plugin for MySharedPlugin {
         app.register_component::<AngularVelocity>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Full);
     }
+}
+
+fn go_ingame(mut next_state: ResMut<NextState<GameState>>) {
+    next_state.set(GameState::Started { paused: false });
 }
 
 pub fn shared_config() -> SharedConfig {

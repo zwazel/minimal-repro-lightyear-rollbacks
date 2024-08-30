@@ -80,12 +80,10 @@ fn setup_ui(mut commands: Commands) {
                 .observe(
                     |_: Trigger<ButtonPressedTrigger>,
                      mut commands: Commands,
-                     mut network: MyNetConfigControl,
-                     mut next_state: ResMut<NextState<GameState>>| {
+                     mut network: MyNetConfigControl| {
                         network.set_to_host();
                         commands.start_server();
                         //commands.connect_client();
-                        next_state.set(GameState::Started { paused: false });
                     },
                 )
                 .with_children(|commands| {
@@ -118,11 +116,9 @@ fn setup_ui(mut commands: Commands) {
                 .observe(
                     |_: Trigger<ButtonPressedTrigger>,
                      mut commands: Commands,
-                     mut network: MyNetConfigControl,
-                     mut next_state: ResMut<NextState<GameState>>| {
+                     mut network: MyNetConfigControl| {
                         network.set_to_join();
                         commands.connect_client();
-                        next_state.set(GameState::Started { paused: false });
                     },
                 )
                 .with_children(|commands| {

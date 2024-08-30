@@ -25,6 +25,7 @@ pub struct MyNetConfigControl<'w> {
 impl<'w> MyNetConfigControl<'w> {
     pub(crate) fn set_to_join(&mut self) {
         let client_config = {
+            println!("Setting client to join");
             let server_addr = SERVER_ADDR;
             let client_addr = CLIENT_ADDR;
             let random_client_id = 1;
@@ -52,6 +53,7 @@ impl<'w> MyNetConfigControl<'w> {
     }
 
     pub(crate) fn set_to_host(&mut self) {
+        println!("Setting client to host");
         let net_config = client::NetConfig::Local { id: 0 };
 
         *self.client_config = client::ClientConfig {
