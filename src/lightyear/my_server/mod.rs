@@ -48,10 +48,10 @@ fn replicate_players(
 
             let replicate = Replicate {
                 sync: sync_target,
-                controlled_by: ControlledBy {
-                    target: NetworkTarget::Single(client_id),
-                    ..default()
-                },
+                // controlled_by: ControlledBy {
+                //     target: NetworkTarget::Single(client_id),
+                //     ..default()
+                // },
                 // make sure that all entities that are predicted are part of the same replication group
                 group: PLAYER_REPLICATION_GROUP,
                 ..default()

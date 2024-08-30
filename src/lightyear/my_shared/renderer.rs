@@ -6,12 +6,12 @@ pub(crate) struct MyRendererPlugin;
 
 impl Plugin for MyRendererPlugin {
     fn build(&self, app: &mut App) {
-        app .add_plugins((
-                VisualInterpolationPlugin::<Position>::default(),
-                VisualInterpolationPlugin::<Rotation>::default(),
-            ))
-            .observe(add_visual_interpolation_components::<Position>)
-            .observe(add_visual_interpolation_components::<Rotation>);
+        // app .add_plugins((
+        //         VisualInterpolationPlugin::<Position>::default(),
+        //         VisualInterpolationPlugin::<Rotation>::default(),
+        //     ))
+        //     .observe(add_visual_interpolation_components::<Position>)
+        //     .observe(add_visual_interpolation_components::<Rotation>);
     }
 }
 

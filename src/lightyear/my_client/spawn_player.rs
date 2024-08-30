@@ -2,7 +2,7 @@ use avian3d::prelude::*;
 use bevy::{color::palettes::css, prelude::*};
 use leafwing_input_manager::prelude::*;
 use lightyear::prelude::client::{ClientConnection, Interpolated, NetClient, Predicted};
-
+use lightyear::prelude::is_host_server;
 use crate::{
     lightyear::my_shared::lib::{
         PhysicalPlayerBodyBundle, PhysicalPlayerBodyMarker, PhysicalPlayerHeadBundle,
@@ -15,11 +15,13 @@ pub struct SpawnPlayerClientPlugin;
 
 impl Plugin for SpawnPlayerClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(InGame), spawn_physical_player)
+        app.add_systems(OnEnter(InGame), spawn_physical_player.run_if(not(is_host_server)))
             .add_systems(Update, add_non_replicated_to_players);
     }
 }
 
+// TODO: if head and body both contribute to movement, they should both be part
+//  of the same replication group
 fn spawn_physical_player(connection: Res<ClientConnection>, mut commands: Commands) {
     commands
         .spawn((

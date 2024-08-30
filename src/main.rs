@@ -41,8 +41,8 @@ fn main() {
     })
     .insert_resource(Time::new_with(Physics::fixed_once_hz(FIXED_TIMESTEP_HZ)))
     .add_systems(Startup, setup_camera)
-    .add_systems(OnEnter(InGamePaused), ungrab_mouse)
-    .add_systems(OnEnter(InGameUnpaused), grab_mouse)
+    // .add_systems(OnEnter(InGamePaused), ungrab_mouse)
+    // .add_systems(OnEnter(InGameUnpaused), grab_mouse)
     .add_systems(OnEnter(InGame), spawn_map)
     .add_systems(Update, ((pause_unpause_game,).run_if(in_state(InGame)),));
 

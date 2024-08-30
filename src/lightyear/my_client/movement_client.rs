@@ -33,7 +33,7 @@ impl Plugin for MyClientMovementPlugin {
                 movement_client
                     .run_if(in_state(InGameUnpaused).and_then(not(is_host_server)))
                     .in_set(FixedSet::Main),
-                (update_grounded, apply_movement_damping).in_set(FixedSet::Physics),
+                // (update_grounded, apply_movement_damping).in_set(FixedSet::Physics),
             ),
         );
     }
