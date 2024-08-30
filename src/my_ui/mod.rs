@@ -85,7 +85,7 @@ fn setup_ui(mut commands: Commands) {
                         network.set_to_host();
                         commands.start_server();
                         commands.connect_client();
-                        next_state.set(GameState::Started);
+                        next_state.set(GameState::Started { paused: false });
                     },
                 )
                 .with_children(|commands| {
@@ -122,7 +122,7 @@ fn setup_ui(mut commands: Commands) {
                      mut next_state: ResMut<NextState<GameState>>| {
                         network.set_to_join();
                         commands.connect_client();
-                        next_state.set(GameState::Started);
+                        next_state.set(GameState::Started { paused: false });
                     },
                 )
                 .with_children(|commands| {

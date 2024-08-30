@@ -8,7 +8,6 @@ use lightyear::prelude::{
     client::{self, Authentication},
     server, CompressionConfig, Key, LinkConditionerConfig,
 };
-use serde::{Deserialize, Serialize};
 
 use super::my_shared::shared_config;
 
