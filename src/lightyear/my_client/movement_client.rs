@@ -1,4 +1,4 @@
-use avian3d::{math::Vector, prelude::*};
+use avian3d::prelude::*;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
 use lightyear::{
@@ -15,10 +15,7 @@ use crate::{
             FixedSet, PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerActions, PlayerId,
         },
         movement::shared_movement,
-        physics::{
-            Grounded, JumpImpulse, MaxMovementSpeed, MaxSlopeAngle, MovementAcceleration,
-            MovementDampingFactor,
-        },
+        physics::lib::{Grounded, JumpImpulse, MaxMovementSpeed, MovementAcceleration},
     },
     my_states::InGameUnpaused,
 };
@@ -29,12 +26,9 @@ impl Plugin for MyClientMovementPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (
-                movement_client
-                    .run_if(in_state(InGameUnpaused).and_then(not(is_host_server)))
-                    .in_set(FixedSet::Main),
-                // (update_grounded, apply_movement_damping).in_set(FixedSet::Physics),
-            ),
+            (movement_client
+                .run_if(in_state(InGameUnpaused).and_then(not(is_host_server)))
+                .in_set(FixedSet::Main),),
         );
     }
 }
@@ -165,41 +159,5 @@ fn movement_client(
                 action_state,
             );
         }
-    }
-}
-
-/// Updates the [`Grounded`] status for character controllers.
-fn update_grounded(
-    mut commands: Commands,
-    mut query: Query<
-        (Entity, &ShapeHits, &Rotation, Option<&MaxSlopeAngle>),
-        With<PhysicalPlayerBodyMarker>,
-    >,
-) {
-    for (entity, hits, rotation, max_slope_angle) in &mut query {
-        // The character is grounded if the shape caster has a hit with a normal
-        // that isn't too steep.
-        let is_grounded = hits.iter().any(|hit| {
-            if let Some(angle) = max_slope_angle {
-                (rotation * -hit.normal2).angle_between(Vector::Y).abs() <= angle.0
-            } else {
-                true
-            }
-        });
-
-        if is_grounded {
-            commands.entity(entity).insert(Grounded);
-        } else {
-            commands.entity(entity).remove::<Grounded>();
-        }
-    }
-}
-
-/// Slows down movement in the XZ plane.
-fn apply_movement_damping(mut query: Query<(&MovementDampingFactor, &mut LinearVelocity)>) {
-    for (damping_factor, mut linear_velocity) in &mut query {
-        // We could use `LinearDamping`, but we don't want to dampen movement along the Y axis
-        linear_velocity.x *= damping_factor.0;
-        linear_velocity.z *= damping_factor.0;
     }
 }

@@ -6,7 +6,7 @@ use lightyear::prelude::is_host_server;
 use crate::lightyear::my_shared::{
     lib::{FixedSet, PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerActions, PlayerId},
     movement::shared_movement,
-    physics::{Grounded, JumpImpulse, MaxMovementSpeed, MovementAcceleration},
+    physics::lib::{Grounded, JumpImpulse, MaxMovementSpeed, MovementAcceleration},
 };
 
 pub struct MyServerMovementPlugin;

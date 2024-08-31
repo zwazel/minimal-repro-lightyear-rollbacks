@@ -14,7 +14,7 @@ use lightyear::prelude::{client::Replicate as ClientReplicate, *};
 use bevy::{ecs::entity::MapEntities, prelude::*};
 use serde::{Deserialize, Serialize};
 
-use super::physics::{
+use super::physics::lib::{
     JumpImpulse, MaxMovementSpeed, MaxSlopeAngle, MovementAcceleration, MovementDampingFactor,
 };
 
@@ -181,6 +181,11 @@ impl PhysicalPlayerBodyBundle {
                 ..default()
             },
         }
+    }
+
+    pub(crate) fn with_head(mut self, head: Entity) -> Self {
+        self.player_marker.head_entity = Some(head);
+        self
     }
 }
 

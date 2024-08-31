@@ -1,40 +1,54 @@
-use avian3d::math::{Scalar, Vector};
+use avian3d::{math::Vector, prelude::*};
 use bevy::prelude::*;
+use lib::{Grounded, MaxSlopeAngle, MovementDampingFactor};
 
-/// A marker component indicating that an entity is on the ground.
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-#[component(storage = "SparseSet")]
-pub(crate) struct Grounded;
+use super::lib::{FixedSet, PhysicalPlayerBodyMarker};
 
-/// The acceleration used for character movement.
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub(crate) struct MovementAcceleration(pub(crate) Scalar);
+pub mod lib;
 
-/// The acceleration used for character movement.
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub(crate) struct MaxMovementSpeed(pub(crate) Scalar);
+pub struct SharedPhysicsPlugin;
 
-/// The damping factor used for slowing down movement.
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub(crate) struct MovementDampingFactor(pub(crate) Scalar);
+impl Plugin for SharedPhysicsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            FixedUpdate,
+            (update_grounded, apply_movement_damping).in_set(FixedSet::Physics),
+        );
+    }
+}
 
-/// The strength of a jump.
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub(crate) struct JumpImpulse(pub(crate) Scalar);
+/// Updates the [`Grounded`] status for character controllers.
+fn update_grounded(
+    mut commands: Commands,
+    mut query: Query<
+        (Entity, &ShapeHits, &Rotation, Option<&MaxSlopeAngle>),
+        With<PhysicalPlayerBodyMarker>,
+    >,
+) {
+    for (entity, hits, rotation, max_slope_angle) in &mut query {
+        // The character is grounded if the shape caster has a hit with a normal
+        // that isn't too steep.
+        let is_grounded = hits.iter().any(|hit| {
+            if let Some(angle) = max_slope_angle {
+                (rotation * -hit.normal2).angle_between(Vector::Y).abs() <= angle.0
+            } else {
+                true
+            }
+        });
 
-/// The gravitational acceleration used for a character controller.
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub(crate) struct ControllerGravity(pub(crate) Vector);
+        if is_grounded {
+            commands.entity(entity).insert(Grounded);
+        } else {
+            commands.entity(entity).remove::<Grounded>();
+        }
+    }
+}
 
-/// The maximum angle a slope can have for a character controller
-/// to be able to climb and jump. If the slope is steeper than this angle,
-/// the character will slide down.
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub(crate) struct MaxSlopeAngle(pub(crate) Scalar);
+/// Slows down movement in the XZ plane.
+fn apply_movement_damping(mut query: Query<(&MovementDampingFactor, &mut LinearVelocity)>) {
+    for (damping_factor, mut linear_velocity) in &mut query {
+        // We could use `LinearDamping`, but we don't want to dampen movement along the Y axis
+        linear_velocity.x *= damping_factor.0;
+        linear_velocity.z *= damping_factor.0;
+    }
+}

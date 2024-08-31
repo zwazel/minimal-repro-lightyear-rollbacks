@@ -7,12 +7,13 @@ use lib::{
     Channel1, FixedSet, PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerActions,
     PlayerId, SERVER_REPLICATION_INTERVAL,
 };
+use lightyear::client::prediction::Predicted;
+use lightyear::prelude::client::{Rollback, RollbackState};
 use lightyear::{
     prelude::*,
     utils::avian3d::{position, rotation},
 };
-use lightyear::client::prediction::Predicted;
-use lightyear::prelude::client::{Rollback, RollbackState};
+use physics::SharedPhysicsPlugin;
 use renderer::MyRendererPlugin;
 use server::NetworkingState as ServerNetworkingState;
 
@@ -41,6 +42,7 @@ impl Plugin for MySharedPlugin {
         app.add_plugins((
             MyRendererPlugin,
             LeafwingInputPlugin::<PlayerActions>::default(),
+            SharedPhysicsPlugin,
         ))
         .configure_sets(
             FixedUpdate,
@@ -59,7 +61,7 @@ impl Plugin for MySharedPlugin {
         .add_systems(OnEnter(ClientNetworkingState::Connected), go_ingame)
         .add_systems(OnEnter(ServerNetworkingState::Started), go_ingame);
 
-        app.add_systems(Last, debug_position);
+        //app.add_systems(Last, debug_position);
 
         app.register_type::<PlayerId>()
             .register_type::<PhysicalPlayerHeadMarker>()
@@ -127,7 +129,6 @@ pub fn shared_config() -> SharedConfig {
         mode: Mode::HostServer,
     }
 }
-
 
 pub fn debug_position(
     tick_manager: Res<TickManager>,

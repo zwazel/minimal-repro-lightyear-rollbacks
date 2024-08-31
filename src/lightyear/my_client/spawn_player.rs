@@ -1,8 +1,3 @@
-use avian3d::prelude::*;
-use bevy::{color::palettes::css, prelude::*};
-use leafwing_input_manager::prelude::*;
-use lightyear::prelude::client::{ClientConnection, Interpolated, NetClient, Predicted};
-use lightyear::prelude::is_host_server;
 use crate::{
     lightyear::my_shared::lib::{
         PhysicalPlayerBodyBundle, PhysicalPlayerBodyMarker, PhysicalPlayerHeadBundle,
@@ -10,6 +5,10 @@ use crate::{
     },
     my_states::InGame,
 };
+use avian3d::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
+use leafwing_input_manager::prelude::*;
+use lightyear::prelude::client::{ClientConnection, Interpolated, NetClient, Predicted};
 
 pub struct SpawnPlayerClientPlugin;
 
@@ -21,6 +20,10 @@ impl Plugin for SpawnPlayerClientPlugin {
 }
 
 fn spawn_physical_player(connection: Res<ClientConnection>, mut commands: Commands) {
+    let head = commands
+        .spawn(PhysicalPlayerHeadBundle::new(connection.client.id()))
+        .id();
+
     commands
         .spawn((
             PhysicalPlayerBodyBundle::new(
@@ -37,12 +40,11 @@ fn spawn_physical_player(connection: Res<ClientConnection>, mut commands: Comman
                     .with_dual_axis(PlayerActions::LookAround, MouseMove::default()),
                 Collider::capsule(0.4, 1.0),
                 connection.client.id(),
-            ),
+            )
+            .with_head(head),
             SpatialBundle::from_transform(Transform::from_xyz(0.0, 5.0, 0.0)),
         ))
-        .with_children(|commands| {
-            commands.spawn(PhysicalPlayerHeadBundle::new(connection.client.id()));
-        });
+        .add_child(head);
 }
 
 /// When we receive other players (whether they are predicted or interpolated), we want to add the physics components

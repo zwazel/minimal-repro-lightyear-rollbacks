@@ -4,7 +4,7 @@ use leafwing_input_manager::prelude::ActionState;
 
 use super::{
     lib::{PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerActions},
-    physics::{JumpImpulse, MaxMovementSpeed, MovementAcceleration},
+    physics::lib::{JumpImpulse, MaxMovementSpeed, MovementAcceleration},
 };
 
 pub fn shared_movement(
@@ -39,19 +39,18 @@ pub fn shared_movement(
         linear_velocity.y = jump_impulse.0;
     }
 
-    // let camera_vector = action_state.axis_pair(&PlayerActions::LookAround) * 0.3;
-    // let max_pitch: f32 = 89.9_f32.to_radians(); // Prevent flipping, slightly less than 90 degrees
-    // let min_pitch: f32 = -89.9_f32.to_radians(); // Slightly more than -90 degrees
-    //
-    // head.pitch = (head.pitch - camera_vector.y.to_radians())
-    //     .min(max_pitch)
-    //     .max(min_pitch);
-    // let head_rotation_quat = Quat::from_axis_angle(Vec3::X, head.pitch);
-    //
-    // body.yaw += -camera_vector.x.to_radians();
-    // let body_rotation_quat = Quat::from_axis_angle(Vec3::Y, body.yaw);
-    //
-    // // Accumulate rotation by multiplying the current quaternion by the new increment
-    // head_transform.rotation = head_rotation_quat;
-    // body_rotation.0 = body_rotation_quat;
+    let camera_vector = action_state.axis_pair(&PlayerActions::LookAround) * 0.3;
+    let max_pitch: f32 = 89.9_f32.to_radians(); // Prevent flipping, slightly less than 90 degrees
+    let min_pitch: f32 = -89.9_f32.to_radians(); // Slightly more than -90 degrees
+
+    head.pitch = (head.pitch - camera_vector.y.to_radians())
+        .min(max_pitch)
+        .max(min_pitch);
+    let head_rotation_quat = Quat::from_axis_angle(Vec3::X, head.pitch);
+
+    body.yaw += -camera_vector.x.to_radians();
+    let body_rotation_quat = Quat::from_axis_angle(Vec3::Y, body.yaw);
+
+    head_transform.rotation = head_rotation_quat;
+    body_rotation.0 = body_rotation_quat;
 }
