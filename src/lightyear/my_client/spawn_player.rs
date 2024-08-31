@@ -96,6 +96,7 @@ fn add_non_replicated_to_players(
         commands.entity(entity).insert((PbrBundle {
             mesh: meshes.add(Cuboid::new(1.0, 1.0, 1.0)),
             material: materials.add(Color::from(css::RED)),
+            transform: Transform::from_xyz(0.0, 2.0, 0.0),
             ..default()
         },));
     }

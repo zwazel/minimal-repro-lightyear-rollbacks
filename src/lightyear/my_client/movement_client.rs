@@ -46,16 +46,16 @@ fn movement_client(
             &ActionState<PlayerActions>,
             &InputBuffer<PlayerActions>,
             Has<Grounded>,
-            &Children,
         ),
         (
             With<PlayerId>,
             With<Predicted>,
             Without<PhysicalPlayerHeadMarker>,
+            With<Children>,
         ),
     >,
     mut player_head_query: Query<
-        (Entity, &mut Transform, &mut PhysicalPlayerHeadMarker),
+        (&mut Transform, &mut PhysicalPlayerHeadMarker),
         (Without<PhysicalPlayerBodyMarker>, With<Predicted>),
     >,
     tick_manager: Res<TickManager>,
@@ -80,16 +80,11 @@ fn movement_client(
         action_state,
         input_buffer,
         is_grounded,
-        children,
     ) in &mut player_body_controller
     {
-        let (head_entity, _, _) = children
-            .iter()
-            .map(|entity| player_head_query.get(*entity).ok())
-            .flatten()
-            .next()
+        let (mut head_transform, mut head) = player_head_query
+            .get_mut(phyiscal_body.head_entity.unwrap())
             .unwrap();
-        let (_, mut head_transform, mut head) = player_head_query.get_mut(head_entity).unwrap();
 
         if input_buffer.get(tick).is_some() {
             shared_movement(

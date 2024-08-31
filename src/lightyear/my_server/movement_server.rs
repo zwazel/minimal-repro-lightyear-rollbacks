@@ -24,7 +24,7 @@ impl Plugin for MyServerMovementPlugin {
 
 fn movement_server(
     mut player_head_query: Query<
-        (Entity, &mut Transform, &mut PhysicalPlayerHeadMarker),
+        (&mut Transform, &mut PhysicalPlayerHeadMarker),
         (Without<PhysicalPlayerBodyMarker>,),
     >,
     mut player_body_controllers: Query<
@@ -38,9 +38,12 @@ fn movement_server(
             &mut PhysicalPlayerBodyMarker,
             &ActionState<PlayerActions>,
             Has<Grounded>,
-            &Children,
         ),
-        (With<PlayerId>, Without<PhysicalPlayerHeadMarker>),
+        (
+            With<PlayerId>,
+            Without<PhysicalPlayerHeadMarker>,
+            With<Children>,
+        ),
     >,
 ) {
     for (
@@ -53,16 +56,11 @@ fn movement_server(
         mut player_body,
         action_state,
         is_grounded,
-        children,
     ) in &mut player_body_controllers
     {
-        let (head_entity, _, _) = children
-            .iter()
-            .map(|entity| player_head_query.get(*entity).ok())
-            .flatten()
-            .next()
+        let (mut head_transform, mut head) = player_head_query
+            .get_mut(player_body.head_entity.unwrap())
             .unwrap();
-        let (_, mut head_transform, mut head) = player_head_query.get_mut(head_entity).unwrap();
 
         shared_movement(
             transform,

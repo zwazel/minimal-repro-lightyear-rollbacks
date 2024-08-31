@@ -11,7 +11,7 @@ use super::{
     lib::SERVER_ADDR,
     my_shared::{
         lib::{
-            PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PLAYER_REPLICATION_GROUP,
+            PhysicalPlayerBodyMarker, PhysicalPlayerHeadMarker, PlayerId, PLAYER_REPLICATION_GROUP,
             SERVER_REPLICATION_INTERVAL,
         },
         shared_config,
@@ -37,16 +37,17 @@ impl Plugin for MyServerPlugin {
 // Replicate the pre-predicted entities back to the client(s)
 fn replicate_players(
     mut commands: Commands,
-    query_body: Query<
-        (Entity, &Replicated),
+    mut query_body: Query<
         (
-            Added<Replicated>,
-            With<PhysicalPlayerBodyMarker>,
-            Without<PhysicalPlayerHeadMarker>,
+            Entity,
+            &PlayerId,
+            &Replicated,
+            &mut PhysicalPlayerBodyMarker,
         ),
+        (Added<Replicated>, Without<PhysicalPlayerHeadMarker>),
     >,
     query_head: Query<
-        (Entity, &Replicated),
+        (Entity, &PlayerId, &Replicated),
         (
             Added<Replicated>,
             With<PhysicalPlayerHeadMarker>,
@@ -54,8 +55,14 @@ fn replicate_players(
         ),
     >,
 ) {
-    for (entity, replicated) in query_body.iter() {
+    for (entity, player_id, replicated, mut body) in query_body.iter_mut() {
         let client_id = replicated.client_id();
+        // Find the head entity for this player
+        let (head, _, _) = query_head
+            .iter()
+            .find(|(_, head_player_id, _)| head_player_id == &player_id)
+            .expect(format!("No head entity found for player {:?}", player_id).as_str());
+        body.head_entity = Some(head);
 
         // for all player entities we have received, add a Replicate component so that we can start replicating it
         // to other clients
@@ -85,7 +92,7 @@ fn replicate_players(
         }
     }
 
-    for (entity, replicated) in query_head.iter() {
+    for (entity, _, replicated) in query_head.iter() {
         let client_id = replicated.client_id();
 
         // for all player entities we have received, add a Replicate component so that we can start replicating it
